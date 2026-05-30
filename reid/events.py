@@ -228,10 +228,62 @@ class RedisPublisher(EventPublisher):
                 pass
 
 
+class HttpPublisher(EventPublisher):
+    """
+    Publishes events to the Store Intelligence API via HTTP POST.
+    Batches events up to 50 or flushes on interval.
+    """
+
+    def __init__(self) -> None:
+        import threading
+        import os
+        self.batch: List[Dict[str, Any]] = []
+        self.lock = threading.Lock()
+        
+        # Use STORE_API_URL if provided, else try to use 'api' if in docker, else localhost
+        default_host = "api" if os.environ.get("EVENT_PUBLISHER") == "http" and os.environ.get("API_HOST") == "0.0.0.0" else "127.0.0.1"
+        base_url = os.environ.get("STORE_API_URL", f"http://{default_host}:8000")
+        self.api_url = f"{base_url}/events/ingest"
+
+    def publish(self, event: Dict[str, Any]) -> None:
+        with self.lock:
+            self.batch.append(event)
+            # Flush if batch is large enough
+            if len(self.batch) >= 20:
+                self.flush()
+
+    def flush(self) -> None:
+        if not self.batch:
+            return
+        import urllib.request
+        import urllib.error
+        
+        with self.lock:
+            payload = json.dumps({"events": self.batch}).encode('utf-8')
+            self.batch.clear()
+
+        req = urllib.request.Request(
+            self.api_url, 
+            data=payload, 
+            headers={'Content-Type': 'application/json'},
+            method='POST'
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=5.0) as response:
+                pass
+        except Exception as exc:
+            logger.warning(f"HttpPublisher failed to POST to {self.api_url}: {exc}")
+
+    def close(self) -> None:
+        self.flush()
+
+
 def create_publisher() -> EventPublisher:
     """
     Factory — creates the correct publisher based on settings.EVENT_PUBLISHER.
     """
     if settings.EVENT_PUBLISHER == "redis":
         return RedisPublisher()
+    elif settings.EVENT_PUBLISHER == "http":
+        return HttpPublisher()
     return StdoutPublisher()
