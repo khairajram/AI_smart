@@ -204,7 +204,7 @@ class Settings(BaseSettings):
     LOG_FORMAT: Literal["json", "console"] = Field(default="console")
 
     # ── Event publishing ─────────────────────────────────────────────
-    EVENT_PUBLISHER: Literal["stdout", "redis"] = Field(
+    EVENT_PUBLISHER: Literal["stdout", "redis", "http"] = Field(
         default="stdout",
         description="Where to publish ReID events. 'redis' requires REDIS_URL.",
     )
