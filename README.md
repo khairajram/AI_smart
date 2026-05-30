@@ -39,7 +39,7 @@ ZIP Dataset (clips + layout + POS)
 
 ```bash
 git clone <your-repo-url>
-cd store-intelligence
+cd AI_smart
 ```
 
 ### Step 2 — Unzip the dataset
@@ -47,7 +47,7 @@ cd store-intelligence
 Unzip the provided challenge dataset ZIP into the project root:
 
 ```
-store-intelligence/
+AI_smart/
 ├── footage/
 │   ├── BRIGADE_BLR/
 │   │   ├── CAM_1.mp4          ← Entry/Exit camera
@@ -389,7 +389,7 @@ cp .env.example .env
 ## Project Structure
 
 ```
-store-intelligence/
+AI_smart/
 │
 ├── pipeline/
 │   └── orchestrator.py     # Per-camera detect → track → embed → match loop
