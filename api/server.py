@@ -214,7 +214,7 @@ def create_app(registry: Optional[Any] = None) -> FastAPI:
         * Errors per rejected event are included in the response body.
         """
         try:
-            raw_events = [e.model_dump() for e in body.events]
+            raw_events = body.events
             result = ingest_events(raw_events)
             # Expose event_count for middleware logging
             request.state.event_count = result.accepted + result.duplicate

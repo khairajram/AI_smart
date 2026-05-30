@@ -158,7 +158,7 @@ class TestBatchMatch:
         # Create entry with similarity ~0.70 (above low-conf floor but below threshold)
         # We'll use a blend to get intermediate similarity
         other = make_embedding(seed=1)
-        blend = 0.85 * q + 0.15 * other
+        blend = 0.65 * q + 0.75 * other
         blend /= np.linalg.norm(blend)
         registry = {"blended": blend}
         result = batch_match(q, registry, threshold=0.95, low_confidence_threshold=0.50)

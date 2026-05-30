@@ -238,7 +238,7 @@ class HttpPublisher(EventPublisher):
         import threading
         import os
         self.batch: List[Dict[str, Any]] = []
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()
         
         # Use STORE_API_URL if provided, else try to use 'api' if in docker, else localhost
         default_host = "api" if os.environ.get("EVENT_PUBLISHER") == "http" and os.environ.get("API_HOST") == "0.0.0.0" else "127.0.0.1"
@@ -249,7 +249,7 @@ class HttpPublisher(EventPublisher):
         with self.lock:
             self.batch.append(event)
             # Flush if batch is large enough
-            if len(self.batch) >= 20:
+            if len(self.batch) >= 1:
                 self.flush()
 
     def flush(self) -> None:
@@ -270,7 +270,8 @@ class HttpPublisher(EventPublisher):
         )
         try:
             with urllib.request.urlopen(req, timeout=5.0) as response:
-                pass
+                body = response.read().decode('utf-8')
+                logger.info(f"HttpPublisher POST {self.api_url} -> {body}")
         except Exception as exc:
             logger.warning(f"HttpPublisher failed to POST to {self.api_url}: {exc}")
 

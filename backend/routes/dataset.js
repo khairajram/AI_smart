@@ -178,13 +178,27 @@ router.post('/ingest', asyncH(async (req, res) => {
       db.insertEvent(event);
       metricsStore.updateFromEvent(event);
       visitorRegistry.upsertVisitor(event);
+      let eventDate;
+      if (typeof event.timestamp === 'number') {
+        // Pipeline sends UNIX seconds (float). JS Date needs milliseconds.
+        // Guard: if value looks like it's already in ms (>1e12) use directly.
+        eventDate = new Date(event.timestamp > 1e12 ? event.timestamp : event.timestamp * 1000);
+      } else {
+        eventDate = new Date(event.timestamp);
+      }
+      
+      if (isNaN(eventDate.getTime())) {
+        console.error('[Ingest] Invalid timestamp for event:', event.event_id, event.timestamp);
+        return;
+      }
+      
       cameraManager.updateCamera(event.camera_id, {
-        last_event:   new Date(event.timestamp * 1000).toISOString(),
+        last_event:   eventDate.toISOString(),
         events_today: (cameraManager.getCameraById(event.camera_id)?.events_today || 0) + 1,
       });
       // Broadcast to dashboard live
       broadcast('reid_event', event);
-    } catch (_) {}
+    } catch (err) { console.error('[Ingest] Error processing event:', err.message); }
   });
 
   // Update metrics broadcast

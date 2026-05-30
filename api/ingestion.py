@@ -82,6 +82,22 @@ def ingest_events(raw_events: List[Dict[str, Any]]) -> IngestResponse:
         len(raw_events), accepted, duplicate, rejected,
     )
 
+    # ── 3. Forward to Node.js Dashboard (fire-and-forget) ───────────
+    if validated:
+        try:
+            import urllib.request
+            import json
+            import os
+            dashboard_url = os.environ.get("DASHBOARD_URL", "http://localhost:3000")
+            req = urllib.request.Request(
+                f"{dashboard_url}/api/dataset/ingest",
+                data=json.dumps({"events": event_dicts}).encode('utf-8'),
+                headers={'Content-Type': 'application/json'}
+            )
+            urllib.request.urlopen(req, timeout=1.0)
+        except Exception as exc:
+            logger.debug("Failed to forward events to dashboard: %s", exc)
+
     return IngestResponse(
         accepted=accepted,
         rejected=rejected,

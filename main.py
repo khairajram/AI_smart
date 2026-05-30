@@ -21,7 +21,7 @@ python main.py \\
     --cameras footage/entrance.mp4 footage/aisle.mp4 \\
     --camera-ids ENTRANCE AISLE
 
-# Demo mode — webcam 0 only
+# Demo mode - webcam 0 only
 python main.py --demo --show
 
 # Tune thresholds via environment variables (no code change needed)
@@ -87,7 +87,7 @@ _shutdown_event = threading.Event()
 
 def _handle_signal(sig, frame):  # noqa: ANN001
     logging.getLogger(__name__).info(
-        "Signal %s received — initiating graceful shutdown", sig
+        "Signal %s received - initiating graceful shutdown", sig
     )
     _shutdown_event.set()
 
@@ -153,11 +153,11 @@ def main(
     max_frames,
 ) -> None:
     """
-    ReID Subsystem — Multi-camera person re-identification pipeline.
+    ReID Subsystem - Multi-camera person re-identification pipeline.
 
     \b
     Architecture:
-        YOLO → ByteTrack → OSNet Embedder → VisitorRegistry → Events
+        YOLO -> ByteTrack -> OSNet Embedder -> VisitorRegistry -> Events
 
     \b
     Key environment variables:

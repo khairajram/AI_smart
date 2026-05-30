@@ -109,7 +109,7 @@ class StoreEvent(BaseModel):
 # ─────────────────────────────────────────────────────────────────────
 
 class IngestRequest(BaseModel):
-    events: List[StoreEvent] = Field(
+    events: List[Dict[str, Any]] = Field(
         ...,
         max_length=500,
         description="Up to 500 events per request"

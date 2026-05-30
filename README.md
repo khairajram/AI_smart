@@ -139,23 +139,34 @@ docker compose run --rm -e EVENT_PUBLISHER=http api python main.py \
 
 ### Option B — Run pipeline locally (faster for development)
 
-```bash
-# Install dependencies
-python -m venv .venv
-.venv\Scripts\activate          # Windows
-# source .venv/bin/activate     # Linux/macOS
+For Windows (using PowerShell):
 
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+```powershell
+# 1. Create Python 3.11 environment, install PyTorch, local ReID models & Node backend deps
+.\setup.ps1
+
+# 2. Start both the FastAPI Backend and Node.js Dashboard in one command
+.\start.ps1
+
+# 3. Run the detection pipeline against footage
+.\venv\Scripts\python.exe main.py --serve --source footage\BRIGADE_BLR
+```
+
+For Linux/macOS (manual fallback):
+
+```bash
+# 1. Create and activate a python venv
+python3 -m venv venv
+source venv/bin/activate
+
+# 2. Install requirements and torchreid
+pip install torch torchvision
 pip install -r requirements.txt
 pip install git+https://github.com/KaiyangZhou/deep-person-reid.git
 
-# Run on footage files (API must be running separately via docker compose up)
-python main.py \
-    --cameras footage/BRIGADE_BLR/CAM_1.mp4 \
-               footage/BRIGADE_BLR/CAM_2.mp4 \
-               footage/BRIGADE_BLR/CAM_4.mp4 \
-    --camera-ids CAM_1 CAM_2 CAM_4 \
-    --store-id BRIGADE_BLR
+# 3. Run the API and Dashboard
+python start_api.py &
+cd backend && npm install && node server.js
 ```
 
 ### Processing all stores at once

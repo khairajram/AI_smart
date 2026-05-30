@@ -18,9 +18,9 @@
  *  11. Listen
  */
 
-require('dotenv').config();
-const http        = require('http');
 const path        = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+const http        = require('http');
 const express     = require('express');
 const { Server }  = require('socket.io');
 const cors        = require('cors');
@@ -64,7 +64,11 @@ app.use(express.urlencoded({ extended: false }));
 // ── Static dashboard ─────────────────────────────────────────────────
 // In Docker: WORKDIR=/app, dashboard files are at /app/dashboard/
 // __dirname is /app, so we join directly (no '..' needed)
-const dashboardPath = path.join(__dirname, 'dashboard');
+const fs = require('fs');
+let dashboardPath = path.join(__dirname, 'dashboard');
+if (!fs.existsSync(dashboardPath)) {
+  dashboardPath = path.join(__dirname, '..', 'dashboard');
+}
 app.use(express.static(dashboardPath));
 app.get('/', (req, res) => {
   res.sendFile(path.join(dashboardPath, 'index.html'));
