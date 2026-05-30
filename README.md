@@ -121,7 +121,7 @@ Once the API is running, process the CCTV clips to generate events.
 
 ```bash
 # Process a single store (Cameras run in parallel)
-docker compose run --rm api python main.py \
+docker compose run --rm -e EVENT_PUBLISHER=http api python main.py \
     --cameras /app/footage/BRIGADE_BLR/CAM_1.mp4 \
                /app/footage/BRIGADE_BLR/CAM_2.mp4 \
                /app/footage/BRIGADE_BLR/CAM_4.mp4 \
@@ -325,7 +325,7 @@ To see metrics update live while the pipeline processes footage:
 docker compose up
 
 # Terminal 2: Start processing footage (sends events to the API in real time)
-docker compose run --rm api python main.py \
+docker compose run --rm -e EVENT_PUBLISHER=http api python main.py \
     --cameras /app/footage/BRIGADE_BLR/CAM_1.mp4 \
                /app/footage/BRIGADE_BLR/CAM_4.mp4 \
     --camera-ids CAM_1 CAM_4 \
