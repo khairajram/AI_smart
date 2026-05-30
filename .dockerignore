@@ -1,0 +1,56 @@
+# .dockerignore — exclude files from Docker build context
+# Without this, node_modules (compiled for Windows) would be
+# copied into the Linux container and cause native module crashes.
+
+# ── Python cache ─────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# ── Virtual environments ─────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Node.js ──────────────────────────────────────────────────────────
+# CRITICAL: Never copy Windows-compiled node_modules into a Linux container
+node_modules/
+backend/node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# ── Local data / secrets ─────────────────────────────────────────────
+.env
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
+# ── Git ──────────────────────────────────────────────────────────────
+.git/
+.gitignore
+
+# ── IDE / OS ─────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Test artifacts ───────────────────────────────────────────────────
+htmlcov/
+.coverage
+coverage.xml
+
+# ── Large binary files not needed in API container ───────────────────
+footage/
+*.mp4
+*.avi
+*.mkv
+*.mov

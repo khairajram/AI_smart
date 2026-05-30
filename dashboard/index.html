@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReID Analytics Dashboard — AI Smart</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js 4.x -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+  <!-- Socket.io 4.x -->
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════
+       HEADER
+  ═══════════════════════════════════════════════ -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-mark">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="8" fill="url(#logoGrad)"/>
+          <path d="M8 12h4l2 4 4-8 2 4h4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="16" cy="22" r="3" fill="white" opacity="0.7"/>
+          <defs>
+            <linearGradient id="logoGrad" x1="0" y1="0" x2="32" y2="32">
+              <stop offset="0%" stop-color="#8b5cf6"/>
+              <stop offset="100%" stop-color="#3b82f6"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="header-title-group">
+        <h1 class="header-title">ReID Analytics</h1>
+        <span class="header-subtitle">AI Smart Vision System</span>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <nav class="header-nav">
+        <a href="#" class="nav-link active" data-section="dashboard">Dashboard</a>
+        <a href="#" class="nav-link" data-section="registry">Registry</a>
+        <a href="#" class="nav-link" data-section="dataset">Dataset</a>
+        <a href="#" class="nav-link" data-section="config">Config</a>
+      </nav>
+    </div>
+
+    <div class="header-right">
+      <div class="mode-badge" id="modeBadge">
+        <span class="mode-dot"></span>
+        <span class="mode-text" id="modeText">DEMO</span>
+      </div>
+      <div class="connection-status" id="connectionStatus">
+        <span class="conn-dot"></span>
+        <span class="conn-label" id="connLabel">Connecting…</span>
+      </div>
+      <div class="header-clock" id="headerClock">00:00:00</div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════
+       MAIN CONTENT
+  ═══════════════════════════════════════════════ -->
+  <main class="app-main">
+
+    <!-- ── STATS ROW ── -->
+    <section class="stats-row" aria-label="Key metrics">
+
+      <article class="metric-card" id="card-active">
+        <div class="metric-icon" style="--icon-color:#8b5cf6">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="metric-body">
+          <div class="metric-label">Active Visitors</div>
+          <div class="metric-value-row">
+            <span class="metric-value" id="metric-active">0</span>
+            <span class="live-pulse"><span class="pulse-dot"></span>LIVE</span>
+          </div>
+          <div class="metric-sub" id="metric-active-sub">In-store now</div>
+        </div>
+        <div class="metric-trend up" id="trend-active">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+        </div>
+      </article>
+
+      <article class="metric-card" id="card-unique">
+        <div class="metric-icon" style="--icon-color:#3b82f6">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <div class="metric-body">
+          <div class="metric-label">Total Unique Visitors</div>
+          <div class="metric-value-row">
+            <span class="metric-value" id="metric-unique">0</span>
+          </div>
+          <div class="metric-sub"><span id="metric-unique-today">0</span> today</div>
+        </div>
+        <div class="metric-sparkline" id="sparkline-unique"></div>
+      </article>
+
+      <article class="metric-card" id="card-reentry">
+        <div class="metric-icon" style="--icon-color:#f59e0b">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"/>
+            <path d="M3.51 15a9 9 0 1 0 .49-4"/>
+          </svg>
+        </div>
+        <div class="metric-body">
+          <div class="metric-label">Re-entries Detected</div>
+          <div class="metric-value-row">
+            <span class="metric-value" id="metric-reentry">0</span>
+            <span class="metric-change" id="metric-reentry-pct">+0%</span>
+          </div>
+          <div class="metric-sub">vs last hour</div>
+        </div>
+      </article>
+
+      <article class="metric-card" id="card-crosscam">
+        <div class="metric-icon" style="--icon-color:#10b981">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 7 16 12 23 17V7z"/>
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+          </svg>
+        </div>
+        <div class="metric-body">
+          <div class="metric-label">Cross-Camera Matches</div>
+          <div class="metric-value-row">
+            <span class="metric-value" id="metric-crosscam">0</span>
+          </div>
+          <div class="metric-sub"><span id="metric-crosscam-rate">0</span> match rate</div>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- ── CAMERAS ── -->
+    <section class="cameras-section" aria-label="Camera feeds">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7 16 12 23 17V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          </span>
+          Camera Network
+        </h2>
+        <span class="section-badge" id="cameras-online-badge">3 Online</span>
+      </div>
+      <div class="cameras-grid" id="camerasGrid">
+
+        <div class="camera-card" data-camera="ENTRANCE" id="cam-ENTRANCE">
+          <div class="camera-card-header">
+            <div class="camera-icon-wrap">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7 16 12 23 17V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            </div>
+            <div>
+              <div class="camera-id">CAM-01</div>
+              <div class="camera-location">ENTRANCE</div>
+            </div>
+            <div class="camera-status online" id="cam-status-ENTRANCE">
+              <span class="status-dot"></span>
+              <span class="status-label">Online</span>
+            </div>
+          </div>
+          <div class="camera-stats">
+            <div class="cam-stat">
+              <span class="cam-stat-label">Active</span>
+              <span class="cam-stat-value" id="cam-active-ENTRANCE">0</span>
+            </div>
+            <div class="cam-stat">
+              <span class="cam-stat-label">FPS</span>
+              <span class="cam-stat-value" id="cam-fps-ENTRANCE">—</span>
+            </div>
+            <div class="cam-stat">
+              <span class="cam-stat-label">Events</span>
+              <span class="cam-stat-value" id="cam-events-ENTRANCE">0</span>
+            </div>
+          </div>
+          <div class="camera-footer">
+            <span class="cam-last-event" id="cam-last-ENTRANCE">No events yet</span>
+          </div>
+        </div>
+
+        <div class="camera-card" data-camera="AISLE_1" id="cam-AISLE_1">
+          <div class="camera-card-header">
+            <div class="camera-icon-wrap">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7 16 12 23 17V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            </div>
+            <div>
+              <div class="camera-id">CAM-02</div>
+              <div class="camera-location">AISLE_1</div>
+            </div>
+            <div class="camera-status online" id="cam-status-AISLE_1">
+              <span class="status-dot"></span>
+              <span class="status-label">Online</span>
+            </div>
+          </div>
+          <div class="camera-stats">
+            <div class="cam-stat">
+              <span class="cam-stat-label">Active</span>
+              <span class="cam-stat-value" id="cam-active-AISLE_1">0</span>
+            </div>
+            <div class="cam-stat">
+              <span class="cam-stat-label">FPS</span>
+              <span class="cam-stat-value" id="cam-fps-AISLE_1">—</span>
+            </div>
+            <div class="cam-stat">
+              <span class="cam-stat-label">Events</span>
+              <span class="cam-stat-value" id="cam-events-AISLE_1">0</span>
+            </div>
+          </div>
+          <div class="camera-footer">
+            <span class="cam-last-event" id="cam-last-AISLE_1">No events yet</span>
+          </div>
+        </div>
+
+        <div class="camera-card" data-camera="CHECKOUT" id="cam-CHECKOUT">
+          <div class="camera-card-header">
+            <div class="camera-icon-wrap">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7 16 12 23 17V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            </div>
+            <div>
+              <div class="camera-id">CAM-03</div>
+              <div class="camera-location">CHECKOUT</div>
+            </div>
+            <div class="camera-status online" id="cam-status-CHECKOUT">
+              <span class="status-dot"></span>
+              <span class="status-label">Online</span>
+            </div>
+          </div>
+          <div class="camera-stats">
+            <div class="cam-stat">
+              <span class="cam-stat-label">Active</span>
+              <span class="cam-stat-value" id="cam-active-CHECKOUT">0</span>
+            </div>
+            <div class="cam-stat">
+              <span class="cam-stat-label">FPS</span>
+              <span class="cam-stat-value" id="cam-fps-CHECKOUT">—</span>
+            </div>
+            <div class="cam-stat">
+              <span class="cam-stat-label">Events</span>
+              <span class="cam-stat-value" id="cam-events-CHECKOUT">0</span>
+            </div>
+          </div>
+          <div class="camera-footer">
+            <span class="cam-last-event" id="cam-last-CHECKOUT">No events yet</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── CONTENT GRID ── -->
+    <section class="content-grid" aria-label="Charts and event feed">
+
+      <!-- Charts Panel -->
+      <div class="charts-panel glass-card">
+        <div class="charts-header">
+          <h2 class="section-title">
+            <span class="section-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </span>
+            Analytics
+          </h2>
+          <div class="chart-tabs" id="chartTabs">
+            <button class="chart-tab active" data-chart="timeline">Timeline</button>
+            <button class="chart-tab" data-chart="distribution">Distribution</button>
+            <button class="chart-tab" data-chart="cameras">Cameras</button>
+            <button class="chart-tab" data-chart="confidence">Confidence</button>
+            <div class="tab-indicator" id="tabIndicator"></div>
+          </div>
+        </div>
+
+        <div class="chart-panels">
+          <div class="chart-panel active" id="panel-timeline">
+            <canvas id="chart-timeline"></canvas>
+          </div>
+          <div class="chart-panel" id="panel-distribution">
+            <canvas id="chart-distribution"></canvas>
+          </div>
+          <div class="chart-panel" id="panel-cameras">
+            <canvas id="chart-cameras"></canvas>
+          </div>
+          <div class="chart-panel" id="panel-confidence">
+            <canvas id="chart-confidence"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event Feed -->
+      <div class="event-feed-panel glass-card">
+        <div class="feed-header">
+          <h2 class="section-title">
+            <span class="section-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </span>
+            Live Event Feed
+          </h2>
+          <div class="feed-controls">
+            <span class="feed-count" id="feedCount">0 events</span>
+            <button class="icon-btn" id="clearFeedBtn" title="Clear feed">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="feed-filter-row">
+          <button class="filter-pill active" data-filter="ALL">All</button>
+          <button class="filter-pill" data-filter="NEW_VISITOR">New</button>
+          <button class="filter-pill" data-filter="REENTRY">Re-entry</button>
+          <button class="filter-pill" data-filter="CROSS_CAMERA_MATCH">Cross-Cam</button>
+          <button class="filter-pill" data-filter="VISITOR_EXITED">Exited</button>
+        </div>
+        <div class="event-feed" id="eventFeed">
+          <div class="feed-empty" id="feedEmpty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <p>Waiting for events…</p>
+          </div>
+        </div>
+        <div class="feed-paused-overlay" id="feedPausedOverlay">⏸ Paused — hover away to resume</div>
+      </div>
+
+    </section>
+
+    <!-- ── REGISTRY ── -->
+    <section class="registry-section glass-card" id="registrySection" aria-label="Active visitor registry">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </span>
+          Active Visitor Registry
+        </h2>
+        <div class="registry-header-right">
+          <span class="registry-count" id="registryCount">0 visitors</span>
+          <span class="registry-update-time" id="registryUpdateTime">—</span>
+        </div>
+      </div>
+
+      <div class="table-scroll-wrap">
+        <table class="registry-table" id="registryTable">
+          <thead>
+            <tr>
+              <th class="sortable" data-col="visitor_id">Visitor ID <span class="sort-icon">⇅</span></th>
+              <th class="sortable" data-col="camera_id">Camera <span class="sort-icon">⇅</span></th>
+              <th class="sortable" data-col="first_seen">First Seen <span class="sort-icon">⇅</span></th>
+              <th class="sortable" data-col="last_seen">Last Seen <span class="sort-icon">⇅</span></th>
+              <th class="sortable" data-col="reentry_count">Re-entries <span class="sort-icon">⇅</span></th>
+              <th class="sortable" data-col="confidence">Confidence <span class="sort-icon">⇅</span></th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="registryBody">
+            <tr class="skeleton-row">
+              <td><div class="skeleton"></div></td>
+              <td><div class="skeleton"></div></td>
+              <td><div class="skeleton"></div></td>
+              <td><div class="skeleton"></div></td>
+              <td><div class="skeleton"></div></td>
+              <td><div class="skeleton"></div></td>
+              <td><div class="skeleton"></div></td>
+            </tr>
+            <tr class="skeleton-row">
+              <td><div class="skeleton"></div></td>
+              <td><div class="skeleton"></div></td>
+              <td><div class="skeleton"></div></td>
+              <td><div class="skeleton"></div></td>
+              <td><div class="skeleton"></div></td>
+              <td><div class="skeleton"></div></td>
+              <td><div class="skeleton"></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── CONFIG PANEL ── -->
+    <section class="config-panel glass-card" id="configSection" aria-label="System configuration">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 1 21 12a10 10 0 0 1-1.93 5.93M4.93 4.93A10 10 0 0 0 3 12a10 10 0 0 0 1.93 5.93"/></svg>
+          </span>
+          System Configuration
+        </h2>
+      </div>
+
+      <div class="config-grid">
+        <div class="config-item">
+          <label class="config-label" for="threshold-reid">
+            ReID Similarity Threshold
+            <span class="config-value-badge" id="badge-reid">0.82</span>
+          </label>
+          <div class="slider-wrap">
+            <input type="range" id="threshold-reid" min="0.70" max="0.95" step="0.01" value="0.82" class="range-slider" />
+            <div class="slider-track-fill" id="fill-reid"></div>
+          </div>
+          <div class="slider-labels"><span>0.70</span><span>0.95</span></div>
+        </div>
+
+        <div class="config-item">
+          <label class="config-label" for="threshold-reentry">
+            Re-entry Threshold
+            <span class="config-value-badge" id="badge-reentry">0.78</span>
+          </label>
+          <div class="slider-wrap">
+            <input type="range" id="threshold-reentry" min="0.70" max="0.92" step="0.01" value="0.78" class="range-slider" />
+            <div class="slider-track-fill" id="fill-reentry"></div>
+          </div>
+          <div class="slider-labels"><span>0.70</span><span>0.92</span></div>
+        </div>
+
+        <div class="config-item">
+          <label class="config-label" for="reentry-window">Re-entry Window</label>
+          <select id="reentry-window" class="config-select">
+            <option value="60">60 seconds</option>
+            <option value="120" selected>120 seconds</option>
+            <option value="300">5 minutes</option>
+            <option value="600">10 minutes</option>
+            <option value="1800">30 minutes</option>
+          </select>
+        </div>
+
+        <div class="config-item config-actions">
+          <button class="btn btn-primary" id="saveConfigBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save Configuration
+          </button>
+          <button class="btn btn-danger" id="resetRegistryBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
+            Reset Registry
+          </button>
+        </div>
+      </div>
+
+      <div class="system-info-row">
+        <div class="sys-info-item">
+          <span class="sys-label">Uptime</span>
+          <span class="sys-value" id="sysUptime">—</span>
+        </div>
+        <div class="sys-info-item">
+          <span class="sys-label">Total Events</span>
+          <span class="sys-value" id="sysTotalEvents">—</span>
+        </div>
+        <div class="sys-info-item">
+          <span class="sys-label">Avg Confidence</span>
+          <span class="sys-value" id="sysAvgConf">—</span>
+        </div>
+        <div class="sys-info-item">
+          <span class="sys-label">Version</span>
+          <span class="sys-value">v2.4.0</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ══ DATASET UPLOAD SECTION ══ -->
+    <section class="dataset-section glass-card" id="datasetSection" aria-label="Dataset processing">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </span>
+          ZIP Dataset Processing
+        </h2>
+        <span class="section-badge" id="datasetCount">0 datasets</span>
+      </div>
+
+      <!-- HOW IT WORKS -->
+      <div class="how-it-works">
+        <div class="hiw-title">Supported ZIP formats</div>
+        <div class="hiw-grid">
+          <div class="hiw-card">
+            <div class="hiw-icon">&#127916;</div>
+            <div class="hiw-label">Multi-camera videos</div>
+            <code>ENTRANCE/video.mp4<br>AISLE_1/video.mp4<br>CHECKOUT/video.mp4</code>
+          </div>
+          <div class="hiw-card">
+            <div class="hiw-icon">&#128247;</div>
+            <div class="hiw-label">Image sequences</div>
+            <code>ENTRANCE/000001.jpg<br>ENTRANCE/000002.jpg<br>AISLE_1/...</code>
+          </div>
+          <div class="hiw-card">
+            <div class="hiw-icon">&#127803;</div>
+            <div class="hiw-label">Flat videos</div>
+            <code>entrance.mp4<br>aisle_1.mp4<br>checkout.mp4</code>
+          </div>
+          <div class="hiw-card">
+            <div class="hiw-icon">&#127891;</div>
+            <div class="hiw-label">Academic datasets</div>
+            <code>Market-1501 / MSMT17<br>DukeMTMC layout<br>bounding_box_test/</code>
+          </div>
+        </div>
+      </div>
+
+      <!-- DROP ZONE -->
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-zone-inner">
+          <div class="drop-zone-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.6">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <div class="drop-zone-text">Drag & drop your ZIP file here</div>
+          <div class="drop-zone-sub">or click to browse — max 2 GB</div>
+          <input type="file" id="datasetFileInput" accept=".zip" style="display:none">
+          <button class="btn btn-primary" onclick="document.getElementById('datasetFileInput').click()" style="margin-top:12px">Browse ZIP file</button>
+        </div>
+      </div>
+
+      <!-- UPLOAD OPTIONS -->
+      <div class="dataset-options" id="datasetOptions" style="display:none">
+        <div class="opt-file-info" id="optFileInfo"></div>
+        <div class="opt-row">
+          <div class="opt-group">
+            <label class="opt-label">FPS (image sequences)</label>
+            <input type="number" id="optFps" value="10" min="1" max="60" class="opt-input">
+          </div>
+          <div class="opt-group">
+            <label class="opt-label">Max frames per camera</label>
+            <input type="number" id="optMaxFrames" value="" placeholder="unlimited" class="opt-input">
+          </div>
+          <div class="opt-group" style="flex:2">
+            <label class="opt-label">Camera name map (old:new, comma-separated)</label>
+            <input type="text" id="optCameraMap" placeholder="cam1:ENTRANCE,cam2:AISLE_1,cam3:CHECKOUT" class="opt-input">
+          </div>
+        </div>
+        <div class="opt-actions">
+          <button class="btn btn-primary" id="uploadAndProcessBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Upload &amp; Process
+          </button>
+          <button class="btn btn-ghost" id="cancelUploadBtn">Cancel</button>
+        </div>
+      </div>
+
+      <!-- PROCESSING PROGRESS -->
+      <div class="dataset-progress" id="datasetProgress" style="display:none">
+        <div class="progress-header">
+          <span class="progress-title" id="progressTitle">Processing…</span>
+          <span class="progress-pct" id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="progressBarFill" style="width:0%"></div>
+        </div>
+        <div class="progress-steps" id="progressSteps"></div>
+        <div class="progress-log" id="progressLog"></div>
+      </div>
+
+      <!-- DATASET LIST -->
+      <div class="dataset-list" id="datasetList"></div>
+
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════════
+       ALERTS SIDEBAR
+  ═══════════════════════════════════════════════ -->
+  <aside class="alerts-sidebar" id="alertsSidebar">
+    <div class="sidebar-toggle" id="sidebarToggle" title="Toggle alerts sidebar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </div>
+
+    <div class="sidebar-content">
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">
+          <span class="sidebar-dot reentry"></span>
+          Re-entry Alerts
+          <span class="sidebar-badge" id="reentryAlertCount">0</span>
+        </div>
+        <div class="alert-list" id="reentryAlerts">
+          <div class="alert-empty">No re-entries yet</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">
+          <span class="sidebar-dot crosscam"></span>
+          Cross-Camera Matches
+          <span class="sidebar-badge" id="crosscamAlertCount">0</span>
+        </div>
+        <div class="alert-list" id="crosscamAlerts">
+          <div class="alert-empty">No matches yet</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════
+       MODAL — Registry Reset Confirmation
+  ═══════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="resetModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <div class="modal-icon danger">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <h3 class="modal-title" id="modalTitle">Reset Visitor Registry?</h3>
+      <p class="modal-body">This will permanently delete all visitor records, tracking data, and re-entry history. This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="modalCancelBtn">Cancel</button>
+        <button class="btn btn-danger" id="modalConfirmBtn">Yes, Reset Everything</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       TOAST CONTAINER
+  ═══════════════════════════════════════════════ -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- Scripts (order matters) -->
+  <script src="js/socket.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/dataset.js"></script>
+</body>
+</html>

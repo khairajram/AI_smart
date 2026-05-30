@@ -1,0 +1,30 @@
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Datasets / Large files
+footage/
+*.mp4
+*.pth
+*.pt
+store_intelligence.db
+yolov8n.pt
+
+# Node
+node_modules/
+dist/
+coverage/
+
+# IDE
+.vscode/
+.idea/
+*.swp

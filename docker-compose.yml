@@ -1,0 +1,95 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────
+#  Store Intelligence — docker compose
+#
+#  Quick Start
+#  -----------
+#  docker compose up           → starts API (port 8000) + dashboard (port 3000)
+#
+#  API docs:        http://localhost:8000/docs
+#  Live dashboard:  http://localhost:3000
+#  Health check:    http://localhost:8000/health
+#
+#  Run detection pipeline on footage clips:
+#  docker compose run --rm api python main.py \
+#    --cameras /app/footage/entrance.mp4 /app/footage/floor.mp4 \
+#    --camera-ids CAM_ENTRY CAM_FLOOR \
+#    --store-id STORE_BLR_002
+#
+#  Run tests:
+#  docker compose run --rm api pytest tests/ -v
+# ─────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Python Store Intelligence API ───────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: store-intelligence-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # SQLite database persisted across restarts
+      - db_data:/app/data
+      # CCTV clip footage (mount your clips here — optional)
+      # If footage/ dir doesn't exist, create it: mkdir footage
+      - ./footage:/app/footage:ro
+    environment:
+      # ── ReID thresholds ─────────────────────────────────────────
+      - REID_SIMILARITY_THRESHOLD=${REID_SIMILARITY_THRESHOLD:-0.82}
+      - REENTRY_SIMILARITY_THRESHOLD=${REENTRY_SIMILARITY_THRESHOLD:-0.80}
+      - REENTRY_WINDOW_SECONDS=${REENTRY_WINDOW_SECONDS:-300}
+      - ACTIVE_VISITOR_TIMEOUT_SECONDS=${ACTIVE_VISITOR_TIMEOUT_SECONDS:-30}
+      # ── Hardware ─────────────────────────────────────────────────
+      - REID_DEVICE=${REID_DEVICE:-cpu}
+      # ── Detection ────────────────────────────────────────────────
+      - YOLO_MODEL=${YOLO_MODEL:-yolov8n.pt}
+      - YOLO_CONFIDENCE=${YOLO_CONFIDENCE:-0.40}
+      # ── Staff detection ──────────────────────────────────────────
+      - STAFF_ZONE_TOP_PCT=${STAFF_ZONE_TOP_PCT:-0.15}
+      - STAFF_STATIC_STD_PX=${STAFF_STATIC_STD_PX:-8.0}
+      - STAFF_DWELL_FRAMES=${STAFF_DWELL_FRAMES:-150}
+      - STAFF_UNIFORM_HUE_MIN=${STAFF_UNIFORM_HUE_MIN:--1}
+      - STAFF_UNIFORM_HUE_MAX=${STAFF_UNIFORM_HUE_MAX:--1}
+      # ── Logging ─────────────────────────────────────────────────
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+      # ── Event publishing ────────────────────────────────────────
+      - EVENT_PUBLISHER=${EVENT_PUBLISHER:-stdout}
+      # ── API binding ──────────────────────────────────────────────
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+    healthcheck:
+      # curl is installed in the Dockerfile specifically for this check
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s     # Give torch/model download time on first run
+    restart: unless-stopped
+
+  # ── Node.js Live Dashboard ───────────────────────────────────────────
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    container_name: store-intelligence-dashboard
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - PYTHON_API_URL=http://api:8000
+      - DEMO_MODE=${DEMO_MODE:-false}
+      - SIMULATE_INTERVAL_MS=${SIMULATE_INTERVAL_MS:-2000}
+      - NODE_ENV=production
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  db_data:
+    driver: local

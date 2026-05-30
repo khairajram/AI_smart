@@ -1,0 +1,80 @@
+{
+  "store_id": "BRIGADE_BLR",
+  "store_name": "Purplle Brigade Road, Bangalore",
+  "store_id_pos": "ST1008",
+  "date": "2026-04-10",
+  "open_time": "11:00:00",
+  "close_time": "22:00:00",
+
+  "cameras": [
+    {
+      "camera_id": "CAM_1",
+      "file": "CAM_1.mp4",
+      "description": "Entry door / Existing Glass — left side entrance",
+      "primary_zone": "ENTRY_EXIT"
+    },
+    {
+      "camera_id": "CAM_2",
+      "file": "CAM_2.mp4",
+      "description": "Skincare back wall — EB Korean, The Face Shop, Good Vibes, DermDoc, Minimalist, Aqualogica, Lakme Skin",
+      "primary_zone": "SKINCARE"
+    },
+    {
+      "camera_id": "CAM_3",
+      "file": "CAM_3.mp4",
+      "description": "F.O.H makeup floor — Makeup Units, Fragrance, Nail Unit",
+      "primary_zone": "MAKEUP_FLOOR"
+    },
+    {
+      "camera_id": "CAM_4",
+      "file": "CAM_4.mp4",
+      "description": "Cash Counter / Billing — right side checkout + PMU",
+      "primary_zone": "BILLING"
+    },
+    {
+      "camera_id": "CAM_5",
+      "file": "CAM_5.mp4",
+      "description": "Front wall makeup — Maybelline, Faces Canada, Lakme, Colorbar+Sugar, Swiss Beauty, Renee NY Bae, Alps Goodness, Streax",
+      "primary_zone": "MAKEUP_BRANDS"
+    }
+  ],
+
+  "zones": [
+    {
+      "zone_id": "ENTRY_EXIT",
+      "display_name": "Store Entry / Exit",
+      "camera_ids": ["CAM_1"],
+      "is_entry": true,
+      "is_exit": true
+    },
+    {
+      "zone_id": "SKINCARE",
+      "display_name": "Skincare & K-Beauty",
+      "camera_ids": ["CAM_2"],
+      "brands": ["EB Korean", "The Face Shop", "Good Vibes", "DermDoc", "Minimalist", "Aqualogica", "Lakme Skin"]
+    },
+    {
+      "zone_id": "MAKEUP_FLOOR",
+      "display_name": "Makeup Floor (F.O.H)",
+      "camera_ids": ["CAM_3"],
+      "brands": ["Makeup Units", "Fragrance", "Nail Unit", "Accessories"]
+    },
+    {
+      "zone_id": "BILLING",
+      "display_name": "Cash Counter / Billing",
+      "camera_ids": ["CAM_4"],
+      "is_billing": true
+    },
+    {
+      "zone_id": "MAKEUP_BRANDS",
+      "display_name": "Makeup Brands Wall",
+      "camera_ids": ["CAM_5"],
+      "brands": ["Maybelline", "Faces Canada", "Lakme", "Colorbar", "Sugar", "Swiss Beauty", "Renee", "NY Bae", "Alps Goodness", "Streax"]
+    }
+  ],
+
+  "staff_zones": {
+    "description": "Top 15% of frame (y < 0.15 * frame_height) indicates staff-only back-of-store area",
+    "spatial_threshold_pct": 0.15
+  }
+}
